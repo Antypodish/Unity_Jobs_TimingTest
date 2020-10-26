@@ -88,7 +88,7 @@ namespace Antypodish.ECS.Tests
 
         }
 
-        [BurstCompatible]
+        [BurstCompile]
         struct Sort : IJob
         {
             public NativeArray <int> withDuplicates ;
@@ -98,7 +98,7 @@ namespace Antypodish.ECS.Tests
             }
         }
     
-        [BurstCompatible]
+        [BurstCompile]
         struct Unique : IJob
         {
             public NativeArray <int> i ;
