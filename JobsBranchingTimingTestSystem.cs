@@ -25,7 +25,7 @@ namespace Antypodish.ECS.Tests
         protected override void OnUpdate ( )
         {
 
-            int i_len = 1000000 ;
+            int i_len = 10000000 ;
             NativeArray <int> na_i = new NativeArray<int> (3, Allocator.TempJob )  ;
         
 
