@@ -141,7 +141,7 @@ namespace Antypodish.ECS.Tests
 
 
 
-        [BurstCompatible]
+        [BurstCompile]
         struct Sort : IJob
         {
             public NativeArray <int> withDuplicates ;
@@ -151,7 +151,7 @@ namespace Antypodish.ECS.Tests
             }
         }
     
-        [BurstCompatible]
+        [BurstCompile]
         struct Unique : IJob
         {
             public NativeArray <int> i ;
@@ -166,7 +166,7 @@ namespace Antypodish.ECS.Tests
 
 
 
-        [BurstCompatible]
+        [BurstCompile]
         struct BranchingQuestion : IJobParallelFor
         {
             [ReadOnly]
@@ -181,7 +181,7 @@ namespace Antypodish.ECS.Tests
             }
         }
     
-        [BurstCompatible]
+        [BurstCompile]
         struct NoBranching : IJobParallelFor
         {
             [ReadOnly]
@@ -198,7 +198,7 @@ namespace Antypodish.ECS.Tests
         }
 
     
-        [BurstCompatible]
+        [BurstCompile]
         struct NoBranchingIf : IJobParallelFor
         {
             [ReadOnly]
@@ -217,7 +217,7 @@ namespace Antypodish.ECS.Tests
     
 
     
-        [BurstCompatible]
+        [BurstCompile]
         struct BranchingIfElse : IJobParallelFor
         {
             [ReadOnly]
