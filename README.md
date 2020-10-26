@@ -8,11 +8,11 @@ Iterating 1 million of elements.
 Main thread no burst
 - Branching using ? 2 ms
 - No branching 5 ms
-- No branchign with if 6 ms
+- No branching with if 6 ms
 - Branching if else 7 ms
 
 Parallel For With burst
 - Branching using ? 9 ms
 - No branching 22 ms
-- No branchign with if 10 ms
+- No branching with if 10 ms
 - Branching if else 10 ms
