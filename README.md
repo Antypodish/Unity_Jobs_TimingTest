@@ -40,7 +40,7 @@ Main thread no burst
   if ( a > b ) { z = a ; } else { z = b ; }
 
 Parallel For With burst         (equivalent)
-- Branching using ? ~4.5 ms        
+- Branching using ? ~4.1 ms        
   int a = i > na_i [1] ? i : na_i [1] ;
 - No branching ~4.5 ms            
   int a = na_i [1] ^ ((i ^ na_i [1]) & -(i << na_i [1])) ;
