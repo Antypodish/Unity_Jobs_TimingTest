@@ -6,7 +6,7 @@ using Unity.Collections;
 using Unity.Entities ;
 using Unity.Burst ;
 using Unity.Jobs ;
-
+using System.Linq;
 
 namespace Antypodish.ECS.Tests
 {
@@ -22,10 +22,10 @@ namespace Antypodish.ECS.Tests
             stopwatch.Restart () ;
             stopwatch.Start () ;
 
-            int i_len = 1000000 ;
+            int i_len = 10000 ;
 
             NativeMultiHashMap <int,int> dic = new NativeMultiHashMap <int, int> ( i_len, Allocator.Temp ) ;
-            NativeMultiHashMap <int,int> dic2 = new NativeMultiHashMap <int, int> ( i_len, Allocator.Temp ) ;
+            NativeMultiHashMap <int,int> dic2 = new NativeMultiHashMap <int, int> ( i_len, Allocator.TempJob ) ;
 
             NativeHashMap <int, int> dic3 = new NativeHashMap <int, int> ( i_len, Allocator.Temp ) ;
             for ( int i = 0; i < i_len; i ++ )
@@ -43,16 +43,25 @@ namespace Antypodish.ECS.Tests
 
             var withDuplicates = dic.GetKeyArray ( Allocator.Temp ) ;
             
-    Debug.Log ( "multi hashmap get keys A " + stopwatch.ElapsedMilliseconds + "ms" ) ;
+    Debug.Log ( "multi hashmap get keys " + stopwatch.ElapsedMilliseconds + "ms" ) ;
             stopwatch.Restart () ;
-            var withDuplicates2 = dic2.GetKeyArray ( Allocator.TempJob ) ;
+
+            NativeArray <int> withDuplicates2 = new NativeArray <int> ( dic2.Count (), Allocator.TempJob, NativeArrayOptions.UninitializedMemory ) ;
             
-    Debug.Log ( "multi hashmap get keys B " + stopwatch.ElapsedMilliseconds + "ms" ) ;
+            Dependency = new GetArray ( )
+            {
+                dic            = dic2,
+                withDuplicates = withDuplicates2 
+            }.Schedule ( Dependency ) ;
+            Dependency.Complete () ;
+
+    Debug.Log ( "multi hashmap get keys job burst B " + stopwatch.ElapsedMilliseconds + "ms" ) ;
             stopwatch.Restart () ;
 
             var noDuplicates = dic3.GetKeyArray ( Allocator.Temp ) ;
     Debug.Log ( "hashmap get keys " + stopwatch.ElapsedMilliseconds + "ms" ) ;
             
+
             /*
             for ( int i = 0; i < noDuplicates.Length; i ++ )
             {
@@ -73,21 +82,22 @@ namespace Antypodish.ECS.Tests
     Debug.Log ( "multi hashmap unique A " + stopwatch.ElapsedMilliseconds + "ms" ) ;
     Debug.Log ( "uniqueCount " + uniqueCount ) ;
             stopwatch.Restart () ;
-            new Sort ( )
+            Dependency = new Sort ( )
             {
                 withDuplicates = withDuplicates2
-            }.Schedule ().Complete () ;
+            }.Schedule ( Dependency ) ;
+            Dependency.Complete () ;
         
     Debug.Log ( "sort job burst B " + stopwatch.ElapsedMilliseconds + "ms" ) ;
             stopwatch.Restart () ;
 
             NativeArray <int> na_i = new NativeArray<int> (3, Allocator.TempJob )  ;
-            new Unique ( )
+            Dependency = new Unique ( )
             {
                 i = na_i,
                 withDuplicates = withDuplicates2
-            }.Schedule ().Complete () ;
-        
+            }.Schedule ( Dependency ) ;
+            Dependency.Complete () ;
             
             uniqueCount = na_i [0] ;
         
@@ -193,7 +203,18 @@ namespace Antypodish.ECS.Tests
             */
         }
 
-
+        
+        [BurstCompile]
+        struct GetArray : IJob
+        {
+            [ReadOnly]
+            public NativeMultiHashMap <int, int> dic ;            
+            public NativeArray <int> withDuplicates ;
+            public void Execute ()
+            {
+                withDuplicates = dic.GetKeyArray ( Allocator.Temp ) ;
+            }
+        }
 
         [BurstCompile]
         struct Sort : IJob
