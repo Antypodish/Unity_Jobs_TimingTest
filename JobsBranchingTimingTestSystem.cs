@@ -1,16 +1,19 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-using Unity.Collections;
+using Unity.Collections ;
+using Unity.Mathematics ;
 using Unity.Entities ;
-using Unity.Jobs;
+using Unity.Burst ;
+using Unity.Jobs ;
 
 // using System.Diagnostics;
 
 namespace Antypodish.ECS.Tests
 {
 
+    // [DisableAutoCreation]
     public class JobsBranchingTimingTestSystem : SystemBase
     {
 
@@ -27,6 +30,7 @@ namespace Antypodish.ECS.Tests
 
             int i_len = 10000000 ;
             NativeArray <int> na_i = new NativeArray<int> (3, Allocator.TempJob )  ;
+            NativeArray <int> na_o = new NativeArray<int> (i_len, Allocator.TempJob )  ;
         
 
 
@@ -74,11 +78,24 @@ namespace Antypodish.ECS.Tests
 
             for ( int i = 0; i < i_len; i ++ )
             {
-                if ( a > b ) { z = a ; } else { z = b ; } ;
+                if ( a > b ) { z = a ; } else { z = b ; }
             }
 
-            // 8ms
+            // 6ms
+    Debug.Log ( "no branching select " + stopwatch.ElapsedMilliseconds ) ;
+        
+            stopwatch.Restart () ;
+
+            for ( int i = 0; i < i_len; i ++ )
+            {
+                z = math.select ( a, b, a > b ) ;
+            }
+
+            // .ms
     Debug.Log ( "if else " + stopwatch.ElapsedMilliseconds ) ;
+
+
+
 
 
     Debug.LogWarning ( "Parallel For Jobs Burst" ) ;
@@ -92,6 +109,7 @@ namespace Antypodish.ECS.Tests
             Dependency = new BranchingQuestion ( )
             {
                 na_i = na_i,
+                na_o = na_o
             }.Schedule ( i_len, 256, Dependency ) ;
             Dependency.Complete () ;
 
@@ -103,6 +121,7 @@ namespace Antypodish.ECS.Tests
             Dependency = new NoBranching ( )
             {
                 na_i = na_i,
+                na_o = na_o
             }.Schedule ( i_len, 256, Dependency ) ;
             Dependency.Complete () ;
 
@@ -114,6 +133,7 @@ namespace Antypodish.ECS.Tests
             Dependency = new NoBranchingIf ( )
             {
                 na_i = na_i,
+                na_o = na_o
             }.Schedule ( i_len, 256, Dependency ) ;
             Dependency.Complete () ;
 
@@ -125,45 +145,33 @@ namespace Antypodish.ECS.Tests
             Dependency = new BranchingIfElse ( )
             {
                 na_i = na_i,
+                na_o = na_o
             }.Schedule ( i_len, 256, Dependency ) ;
             Dependency.Complete () ;
 
             // 10 ms
     Debug.Log ( "burst branching if else " + stopwatch.ElapsedMilliseconds ) ;
+            
+            stopwatch.Restart () ;
+
+            Dependency = new NoBranchingSelect ( )
+            {
+                na_i = na_i,
+                na_o = na_o
+            }.Schedule ( i_len, 256, Dependency ) ;
+            Dependency.Complete () ;
+
+            // . ms
+    Debug.Log ( "burst no branching select " + stopwatch.ElapsedMilliseconds ) ;
 
             stopwatch.Stop () ;
 
             na_i.Dispose () ;
+            na_o.Dispose () ;
 
             Debug.LogError ( "Stop" ) ;
-
+            
         }
-
-
-
-        [BurstCompile]
-        struct Sort : IJob
-        {
-            public NativeArray <int> withDuplicates ;
-            public void Execute ()
-            {
-                withDuplicates.Sort () ;
-            }
-        }
-    
-        [BurstCompile]
-        struct Unique : IJob
-        {
-            public NativeArray <int> i ;
-            public NativeArray <int> withDuplicates ;
-            public void Execute ()
-            {
-                i [0] = withDuplicates.Unique () ;
-            }
-        }
-
-    
-
 
 
         [BurstCompile]
@@ -171,11 +179,13 @@ namespace Antypodish.ECS.Tests
         {
             [ReadOnly]
             public NativeArray <int> na_i ;
+            [NativeDisableParallelForRestriction]
+            public NativeArray <int> na_o ;
             public void Execute ( int i )
             {
                 // for ( int i = 0; i < 1000000; i ++ )
                 //{
-                int a = i > na_i [1] ? i : na_i [1] ;
+                na_o [i] = i > na_i [1] ? i : na_i [1] ;
     //                 na_i [2] = i > na_i [1] ? i : na_i [1] ;
                 //}
             }
@@ -186,12 +196,14 @@ namespace Antypodish.ECS.Tests
         {
             [ReadOnly]
             public NativeArray <int> na_i ;
+            [NativeDisableParallelForRestriction]
+            public NativeArray <int> na_o ;
             public void Execute ( int i )
             {
                 //for ( int i = 0; i < 1000000; i ++ )
                 //{
 
-                int a = na_i [1] ^ ((i ^ na_i [1]) & -(i << na_i [1])) ;
+                na_o [i] = na_i [1] ^ ((i ^ na_i [1]) & -(i << na_i [1])) ;
                     // na_i [2] = na_i [1] ^ ((i ^ na_i [1]) & -(i >> na_i [1])) ;
                 //}
             }
@@ -203,35 +215,59 @@ namespace Antypodish.ECS.Tests
         {
             [ReadOnly]
             public NativeArray <int> na_i ;
+            [NativeDisableParallelForRestriction]
+            public NativeArray <int> na_o ;
             public void Execute ( int i )
             {
                 //for ( int i = 0; i < 1000000; i ++ )
                 //{
                 int a = i ;
                 if ( i <= na_i [1] ) a = na_i [1] ;
+                na_o [i] = a ;
                     // na_i [2] = i ;
                     // if ( i <= na_i [1] ) na_i [2] = na_i [1] ;
                 //}
             }
         }
     
-
     
         [BurstCompile]
         struct BranchingIfElse : IJobParallelFor
         {
             [ReadOnly]
             public NativeArray <int> na_i ;
+            [NativeDisableParallelForRestriction]
+            public NativeArray <int> na_o ;
             public void Execute ( int i )
             {
                 //for ( int i = 0; i < 1000000; i ++ )
                 //{
                 int a ;
                 if ( i > na_i [1] ) { a = i ; } else { a = na_i [1] ; }
+                na_o [i] = a ;
                     // if ( i > na_i [1] ) { na_i [2] = i ; } else { na_i [2] = na_i [1] ; }
                 //}
             }
         }
+        
+
+        [BurstCompile]
+        struct NoBranchingSelect : IJobParallelFor
+        {
+            [ReadOnly]
+            public NativeArray <int> na_i ;
+            [NativeDisableParallelForRestriction]
+            public NativeArray <int> na_o ;
+            public void Execute ( int i )
+            {
+                // for ( int i = 0; i < 1000000; i ++ )
+                //{
+                na_o [i] = math.select ( i, na_i [1], i > na_i [1] ) ;
+    //                 na_i [2] = i > na_i [1] ? i : na_i [1] ;
+                //}
+            }
+        }
+
 
     }
 
