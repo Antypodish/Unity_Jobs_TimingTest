@@ -3,7 +3,7 @@ Testing timing of different branching approaches.
 
 Jobs Branching Timing test has following results:
 
-Iterating 1 million of elements.
+**Iterating 1 million of elements.**
 
 Main thread no burst
 - Branching using ternary 2 ms        
@@ -27,7 +27,7 @@ Parallel For With burst         (equivalent)
 
 
 
-Iterating 10 million of elements.
+**Iterating 10 million of elements.**
 
 Main thread no burst
 - Branching using ternary 49 ms        
