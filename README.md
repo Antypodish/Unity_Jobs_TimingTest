@@ -6,7 +6,7 @@ Jobs Branching Timing test has following results:
 Iterating 1 million of elements.
 
 Main thread no burst
-- Branching using ? 2 ms        
+- Branching using ternary 2 ms        
   z = i > b ? i : b ;
 - No branching 5 ms             
   z = b ^ ((i ^ b) & -(i << b)) ;
@@ -16,7 +16,7 @@ Main thread no burst
   if ( a > b ) { z = a ; } else { z = b ; }
 
 Parallel For With burst         (equivalent)
-- Branching using ? 0 ms        
+- Branching using ternary 0 ms        
   int a = i > na_i [1] ? i : na_i [1] ;
 - No branching 0 ms            
   int a = na_i [1] ^ ((i ^ na_i [1]) & -(i << na_i [1])) ;
@@ -30,7 +30,7 @@ Parallel For With burst         (equivalent)
 Iterating 10 million of elements.
 
 Main thread no burst
-- Branching using ? 49 ms        
+- Branching using ternary 49 ms        
   z = i > b ? i : b ;
 - No branching 28 ms             
   z = b ^ ((i ^ b) & -(i << b)) ;
@@ -40,7 +40,7 @@ Main thread no burst
   if ( a > b ) { z = a ; } else { z = b ; }
 
 Parallel For With burst         (equivalent)
-- Branching using ? ~4.1 ms        
+- Branching using ternary ~4.1 ms        
   int a = i > na_i [1] ? i : na_i [1] ;
 - No branching ~4.5 ms            
   int a = na_i [1] ^ ((i ^ na_i [1]) & -(i << na_i [1])) ;
